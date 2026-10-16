@@ -8,7 +8,7 @@ export function ChurchProgressStrip({ churches }: { churches: ChurchProgress[] }
           <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">{group.church}</p>
           <p
             className="mt-1 font-display text-3xl leading-none tracking-tight"
-            aria-label={`${group.met} of ${group.pool} other ${group.church} attendees met`}
+            aria-label={`${group.met} of ${group.pool} ${group.church} attendees met`}
           >
             {group.met}
             <span className="text-muted-foreground">/{group.pool}</span>

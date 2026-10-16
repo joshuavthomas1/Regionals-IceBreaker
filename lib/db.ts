@@ -435,6 +435,7 @@ export function getBoard(youId: number | null): BoardSnapshot {
   };
 
   const count = attendeeCount.count;
+  const churches = churchProgress(db, youId);
   return {
     leaders: active.slice(0, BOARD_LIMIT),
     you: youRow
@@ -443,8 +444,8 @@ export function getBoard(youId: number | null): BoardSnapshot {
     recent,
     attendeeCount: count,
     meetingCount: meetingCount.count,
-    others: Math.max(0, count - 1),
-    churches: churchProgress(db, youId),
+    others: churches.reduce((sum, group) => sum + group.pool, 0),
+    churches,
     truncated: active.length > BOARD_LIMIT,
   };
 }
@@ -455,14 +456,9 @@ function churchProgress(db: Database.Database, youId: number | null): ChurchProg
     headcount: number;
   }>;
   const headcounts = new Map(counts.map((row) => [row.church, row.headcount]));
-  let viewerChurch = "";
   const metByChurch = new Map<string, number>();
 
   if (youId != null) {
-    const self = db.prepare("SELECT church FROM attendees WHERE id = ?").get(youId) as
-      | { church: string }
-      | undefined;
-    viewerChurch = self?.church ?? "";
     const mets = db
       .prepare(
         `SELECT o.church AS church, COUNT(*) AS met
@@ -480,11 +476,10 @@ function churchProgress(db: Database.Database, youId: number | null): ChurchProg
 
   return CHURCHES.map((church) => {
     const headcount = headcounts.get(church) ?? 0;
-    const pool = Math.max(0, headcount - (viewerChurch === church ? 1 : 0));
     return {
       church,
-      met: Math.min(metByChurch.get(church) ?? 0, pool),
-      pool,
+      met: metByChurch.get(church) ?? 0,
+      pool: headcount,
       headcount,
     };
   });

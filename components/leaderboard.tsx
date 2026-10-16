@@ -59,7 +59,7 @@ export function Leaderboard({ initial }: { initial: BoardSnapshot }) {
           Who&apos;s met the most people?
         </h1>
         <p className="max-w-md text-base text-muted-foreground">
-          Scan a badge. Both of you move up. The score is people met over everyone else still in the room.
+          Scan a badge. Both of you move up. The score is people met over the people in the room.
           {board.attendeeCount > 0
             ? ` ${board.attendeeCount} ${board.attendeeCount === 1 ? "badge" : "badges"}, ${board.meetingCount} ${board.meetingCount === 1 ? "meeting" : "meetings"}.`
             : " Badges go up once the desk adds the room."}
