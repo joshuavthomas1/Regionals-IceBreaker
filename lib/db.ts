@@ -451,33 +451,32 @@ export function getBoard(youId: number | null): BoardSnapshot {
 }
 
 function churchProgress(db: Database.Database, youId: number | null): ChurchProgress[] {
+  if (youId == null) return [];
+
   const counts = db.prepare("SELECT church, COUNT(*) AS headcount FROM attendees GROUP BY church").all() as Array<{
     church: string;
     headcount: number;
   }>;
   const headcounts = new Map(counts.map((row) => [row.church, row.headcount]));
   const metByChurch = new Map<string, number>();
-  let viewerChurch = "";
 
-  if (youId != null) {
-    const self = db.prepare("SELECT church FROM attendees WHERE id = ?").get(youId) as
-      | { church: string }
-      | undefined;
-    viewerChurch = self?.church ?? "";
-    const mets = db
-      .prepare(
-        `SELECT o.church AS church, COUNT(*) AS met
-         FROM meetings m
-         JOIN attendees o ON o.id = CASE
-           WHEN m.scanner_id = ? THEN m.scanned_id
-           ELSE m.scanner_id
-         END
-         WHERE m.scanner_id = ? OR m.scanned_id = ?
-         GROUP BY o.church`,
-      )
-      .all(youId, youId, youId) as Array<{ church: string; met: number }>;
-    for (const row of mets) metByChurch.set(row.church, row.met);
-  }
+  const self = db.prepare("SELECT church FROM attendees WHERE id = ?").get(youId) as
+    | { church: string }
+    | undefined;
+  const viewerChurch = self?.church ?? "";
+  const mets = db
+    .prepare(
+      `SELECT o.church AS church, COUNT(*) AS met
+       FROM meetings m
+       JOIN attendees o ON o.id = CASE
+         WHEN m.scanner_id = ? THEN m.scanned_id
+         ELSE m.scanner_id
+       END
+       WHERE m.scanner_id = ? OR m.scanned_id = ?
+       GROUP BY o.church`,
+    )
+    .all(youId, youId, youId) as Array<{ church: string; met: number }>;
+  for (const row of mets) metByChurch.set(row.church, row.met);
 
   return CHURCHES.map((church) => {
     const headcount = headcounts.get(church) ?? 0;

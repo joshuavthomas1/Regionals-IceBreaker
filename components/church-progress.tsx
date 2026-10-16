@@ -1,6 +1,8 @@
 import type { ChurchProgress } from "@/lib/types";
 
 export function ChurchProgressStrip({ churches }: { churches: ChurchProgress[] }) {
+  if (churches.length === 0) return null;
+
   return (
     <section aria-label="People met from each church" className="grid grid-cols-3 gap-2">
       {churches.map((group) => (

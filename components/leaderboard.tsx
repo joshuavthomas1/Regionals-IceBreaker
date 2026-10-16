@@ -66,7 +66,7 @@ export function Leaderboard({ initial }: { initial: BoardSnapshot }) {
         </p>
       </div>
 
-      <ChurchProgressStrip churches={board.churches} />
+      {you ? <ChurchProgressStrip churches={board.churches} /> : null}
 
       {error ? (
         <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive" role="status">
