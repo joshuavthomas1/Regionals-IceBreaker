@@ -25,7 +25,7 @@ export function AdminPeople({ attendees }: { attendees: Attendee[] }) {
     const needle = query.trim().toLowerCase();
     if (!needle) return attendees;
     return attendees.filter((attendee) =>
-      [attendee.name, attendee.company, attendee.title, attendee.church, attendee.code]
+      [attendee.name, attendee.church, attendee.code]
         .join(" ")
         .toLowerCase()
         .includes(needle),
@@ -70,7 +70,7 @@ export function AdminPeople({ attendees }: { attendees: Attendee[] }) {
       <section className="rounded-2xl border border-border bg-card p-4">
         <h2 className="font-display text-2xl tracking-tight">Import a CSV</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Columns: name, company, title, fun_fact, church. Church is DMTC, CMTC, or STMTC. Name and church are required.
+          Columns: name, fun_fact, church. Church is DMTC, CMTC, or STMTC. Name and church are required.
         </p>
         <a href="/attendees-template.csv" className="mt-2 inline-block text-sm text-primary underline-offset-4 hover:underline">
           Download a template
@@ -123,7 +123,7 @@ export function AdminPeople({ attendees }: { attendees: Attendee[] }) {
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search name, church, company, or code"
+          placeholder="Search name, church, or code"
           aria-label="Search attendees"
           className={fieldClass}
         />
@@ -161,9 +161,9 @@ export function AdminPeople({ attendees }: { attendees: Attendee[] }) {
                           </span>
                         ) : null}
                       </p>
-                      <p className="truncate text-sm text-muted-foreground">
-                        {[attendee.title, attendee.company].filter(Boolean).join(" · ") || "No company yet"}
-                      </p>
+                      {attendee.church ? null : (
+                        <p className="truncate text-sm text-muted-foreground">No church yet</p>
+                      )}
                       <p className="mt-1 font-mono text-xs tracking-[0.16em]">{attendee.code}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -212,8 +212,6 @@ function AddForm({
   onAdd: (input: { name: string; company: string; title: string; church: Church; funFact: string }) => Promise<boolean>;
 }) {
   const [name, setName] = useState("");
-  const [company, setCompany] = useState("");
-  const [title, setTitle] = useState("");
   const [church, setChurch] = useState<Church | "">("");
   const [funFact, setFunFact] = useState("");
 
@@ -223,21 +221,15 @@ function AddForm({
       onSubmit={async (event) => {
         event.preventDefault();
         if (!church) return;
-        const saved = await onAdd({ name, company, title, church, funFact });
+        const saved = await onAdd({ name, company: "", title: "", church, funFact });
         if (!saved) return;
         setName("");
-        setCompany("");
-        setTitle("");
         setChurch("");
         setFunFact("");
       }}
     >
       <Field id="add-name" label="Name" value={name} onChange={setName} required />
       <ChurchField id="add-church" value={church} onChange={setChurch} />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field id="add-company" label="Company" value={company} onChange={setCompany} />
-        <Field id="add-title" label="Title" value={title} onChange={setTitle} />
-      </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="add-fact">Fun fact</Label>
         <Textarea
@@ -267,8 +259,6 @@ function EditForm({
   onCancel: () => void;
 }) {
   const [name, setName] = useState(attendee.name);
-  const [company, setCompany] = useState(attendee.company);
-  const [title, setTitle] = useState(attendee.title);
   const [church, setChurch] = useState<Church | "">(attendee.church);
   const [funFact, setFunFact] = useState(attendee.funFact);
 
@@ -278,13 +268,11 @@ function EditForm({
       onSubmit={(event) => {
         event.preventDefault();
         if (!church) return;
-        onSave({ name, company, title, church, funFact });
+        onSave({ name, company: attendee.company, title: attendee.title, church, funFact });
       }}
     >
       <Field id={`name-${attendee.id}`} label="Name" value={name} onChange={setName} required />
       <ChurchField id={`church-${attendee.id}`} value={church} onChange={setChurch} />
-      <Field id={`company-${attendee.id}`} label="Company" value={company} onChange={setCompany} />
-      <Field id={`title-${attendee.id}`} label="Title" value={title} onChange={setTitle} />
       <div className="flex flex-col gap-2">
         <Label htmlFor={`fact-${attendee.id}`}>Fun fact</Label>
         <Textarea

@@ -46,7 +46,7 @@ export default async function MePage() {
             <p className="text-xs font-medium tracking-[0.18em] text-primary uppercase">You</p>
             <h1 className="font-display text-4xl leading-none tracking-tight">{attendee.name}</h1>
             <p className="text-muted-foreground">
-              {[attendee.church, attendee.title, attendee.company].filter(Boolean).join(" · ") || "Checked in"}
+              {attendee.church || "Checked in"}
             </p>
           </div>
           <MetFraction met={meetings.length} total={board.others} size="place" />
@@ -72,9 +72,7 @@ export default async function MePage() {
                   <p className="font-medium">{person.name}</p>
                   <p className="shrink-0 text-xs text-muted-foreground">{formatWhen(person.metAt)}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {[person.church, person.title, person.company].filter(Boolean).join(" · ")}
-                </p>
+                {person.church ? <p className="text-sm text-muted-foreground">{person.church}</p> : null}
                 {person.funFact ? <p className="mt-2 text-sm">&ldquo;{person.funFact}&rdquo;</p> : null}
               </li>
             ))}

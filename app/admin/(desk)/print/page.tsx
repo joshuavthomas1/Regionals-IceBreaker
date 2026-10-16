@@ -27,7 +27,7 @@ export default async function PrintPage() {
       <div className="no-print flex flex-col gap-3">
         <h1 className="font-display text-4xl tracking-tight">Print badges</h1>
         <p className="max-w-xl text-muted-foreground">
-          Each block is one name tag: name, company, QR, and a backup code. Use the browser print
+          Each block is one name tag: name, church, QR, and a backup code. Use the browser print
           dialog and save a PDF for the printer.
         </p>
         {local ? (
@@ -59,8 +59,6 @@ export default async function PrintPage() {
                 {badge.church ? (
                   <p className="mt-1 text-xs font-medium tracking-[0.16em] text-primary uppercase">{badge.church}</p>
                 ) : null}
-                {badge.company ? <p className="mt-1 text-sm">{badge.company}</p> : null}
-                {badge.title ? <p className="text-sm text-muted-foreground">{badge.title}</p> : null}
               </div>
               <div className="flex shrink-0 flex-col items-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

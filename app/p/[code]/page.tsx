@@ -46,8 +46,8 @@ export default async function BadgePage({ params }: { params: Promise<{ code: st
         person={{
           id: attendee.id,
           name: attendee.name,
-          company: attendee.company,
-          title: attendee.title,
+          company: "",
+          title: "",
           church: attendee.church,
           funFact: attendee.funFact,
           code: attendee.code,

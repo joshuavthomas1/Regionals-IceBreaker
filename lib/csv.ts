@@ -18,7 +18,7 @@ export function parseCsv(text: string): CsvParse {
   if (nameIdx < 0) {
     return {
       rows: [],
-      errors: ["The first row needs a name column: name,company,title,fun_fact,church"],
+      errors: ["The first row needs a name column: name,fun_fact,church"],
     };
   }
 
@@ -26,7 +26,7 @@ export function parseCsv(text: string): CsvParse {
   if (churchIdx < 0) {
     return {
       rows: [],
-      errors: ["The first row needs a church column: name,company,title,fun_fact,church"],
+      errors: ["The first row needs a church column: name,fun_fact,church"],
     };
   }
 

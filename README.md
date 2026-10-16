@@ -19,7 +19,7 @@ Attendees, meetings, and check-ins are stored in `data/icebreaker.sqlite`.
 
 On the badge desk:
 
-1. Add people one at a time, or import a CSV with the header `name,company,title,fun_fact,church`. Church is `DMTC`, `CMTC`, or `STMTC`. Only `name` and `church` are required. A template is linked on the page.
+1. Add people one at a time, or import a CSV with the header `name,fun_fact,church`. Church is `DMTC`, `CMTC`, or `STMTC`. Name and church are required. A template is linked on the page.
 2. Or load the sample attendees for a dry run.
 3. Set the public link in Settings to the address phones will actually open, such as `https://icebreaker.example.com`. QR codes use that link. The print page warns you if they still point at localhost.
 4. Open Print and use the browser print dialog to save a PDF for name tags. Each person also has a PNG download.

@@ -149,7 +149,7 @@ export function Leaderboard({ initial }: { initial: BoardSnapshot }) {
                     {mine ? <span className="text-primary"> · you</span> : null}
                   </span>
                   <span className="block truncate text-sm text-muted-foreground">
-                    {[row.church, row.title, row.company].filter(Boolean).join(" · ") || "In the room"}
+                    {row.church || "In the room"}
                   </span>
                 </span>
                 <MetFraction met={row.score} total={board.others} />

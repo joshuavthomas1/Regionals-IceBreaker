@@ -382,8 +382,6 @@ export function getBoard(youId: number | null): BoardSnapshot {
       `SELECT
          a.id,
          a.name,
-         a.company,
-         a.title,
          a.church,
          (
            SELECT COUNT(*)
@@ -396,8 +394,6 @@ export function getBoard(youId: number | null): BoardSnapshot {
     .all() as Array<{
     id: number;
     name: string;
-    company: string;
-    title: string;
     church: string;
     score: number;
   }>;

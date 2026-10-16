@@ -17,8 +17,6 @@ export type Attendee = Person & {
 export type BoardRow = {
   id: number;
   name: string;
-  company: string;
-  title: string;
   church: Church | "";
   score: number;
   rank: number;
