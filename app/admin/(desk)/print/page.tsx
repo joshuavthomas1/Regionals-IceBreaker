@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PrintButton } from "@/components/print-button";
-import { badgeUrl, isLocalHost, listAttendees, resolveBaseUrl } from "@/lib/db";
+import { badgeUrl, listAttendees, publicLinkKind, resolveBaseUrl } from "@/lib/db";
 import { qrDataUrl } from "@/lib/qr";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default async function PrintPage() {
   const attendees = listAttendees();
   const baseUrl = await resolveBaseUrl();
-  const local = isLocalHost(baseUrl);
+  const linkKind = publicLinkKind(baseUrl);
   const badges = await Promise.all(
     attendees.map(async (attendee) => ({
       ...attendee,
@@ -30,19 +30,27 @@ export default async function PrintPage() {
           Each block is one name tag: name, church, QR, and a backup code. Use the browser print
           dialog and save a PDF for the printer.
         </p>
-        {local ? (
+        {linkKind === "local" ? (
           <p className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm" role="status">
-            These QR codes point at {baseUrl}. Set the public link in{" "}
+            These QR codes point at {baseUrl}. A phone that is not on this computer&apos;s network cannot open them.
+            Run <span className="font-mono text-xs">npm run share</span>, leave it running, then print. Or set a public
+            link in{" "}
             <Link href="/admin/settings" className="underline underline-offset-4">
               settings
-            </Link>{" "}
-            before you print for the conference.
+            </Link>
+            .
           </p>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Codes open {baseUrl}/p/…
+        ) : null}
+        {linkKind === "tunnel" ? (
+          <p className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm" role="status">
+            These QR codes point at {baseUrl}. That works from cellular data while{" "}
+            <span className="font-mono text-xs">npm run share</span> stays running. Restarting it changes the address,
+            so print again if you do.
           </p>
-        )}
+        ) : null}
+        {linkKind === "public" ? (
+          <p className="text-sm text-muted-foreground">Codes open {baseUrl}/p/… from any network.</p>
+        ) : null}
         {badges.length > 0 ? <PrintButton /> : null}
       </div>
 

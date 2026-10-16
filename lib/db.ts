@@ -536,6 +536,16 @@ export function isLocalHost(url: string) {
   }
 }
 
+export function publicLinkKind(url: string): "local" | "tunnel" | "public" {
+  if (isLocalHost(url)) return "local";
+  try {
+    if (new URL(url).hostname.endsWith(".trycloudflare.com")) return "tunnel";
+  } catch {
+    return "local";
+  }
+  return "public";
+}
+
 export async function resolveBaseUrl() {
   const saved = getSetting("baseUrl");
   if (saved) return saved.replace(/\/$/, "");

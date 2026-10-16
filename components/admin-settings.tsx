@@ -10,11 +10,11 @@ import { ApiError, postJson } from "@/lib/api-client";
 export function AdminSettings({
   baseUrl,
   resolvedBaseUrl,
-  local,
+  linkKind,
 }: {
   baseUrl: string;
   resolvedBaseUrl: string;
-  local: boolean;
+  linkKind: "local" | "tunnel" | "public";
 }) {
   const router = useRouter();
   const [value, setValue] = useState(baseUrl);
@@ -60,11 +60,23 @@ export function AdminSettings({
         <h2 className="font-display text-2xl tracking-tight">Public link</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           QR codes open <span className="font-mono text-xs">{resolvedBaseUrl}/p/…</span>
-          {local ? " Set the address attendees can reach before you print." : ""}
         </p>
-        {local ? (
+        {linkKind === "local" ? (
           <p className="mt-3 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm" role="status">
-            These codes still point at this computer. Printed badges won&apos;t work on the conference wifi until you set the public link.
+            These codes still point at this computer. A phone on cellular data cannot open them. Run{" "}
+            <span className="font-mono text-xs">npm run share</span> and leave it running, then print the badges.
+          </p>
+        ) : null}
+        {linkKind === "tunnel" ? (
+          <p className="mt-3 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm" role="status">
+            Phones on cellular data can open this link while <span className="font-mono text-xs">npm run share</span>{" "}
+            stays running. Stopping that command closes the address. The next run gets a new one, so print the badges
+            again if you restart it.
+          </p>
+        ) : null}
+        {linkKind === "public" ? (
+          <p className="mt-3 text-sm text-muted-foreground">
+            Phones can open this link from cellular data or any other network.
           </p>
         ) : null}
         <form onSubmit={save} className="mt-4 flex flex-col gap-3">

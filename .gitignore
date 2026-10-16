@@ -37,6 +37,9 @@ yarn-error.log*
 # conference data
 /data/
 
+# downloaded tunnel client
+/.cache/
+
 # vercel
 .vercel
 

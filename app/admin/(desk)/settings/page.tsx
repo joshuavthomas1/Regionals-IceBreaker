@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { AdminSettings } from "@/components/admin-settings";
-import { getSetting, isLocalHost, resolveBaseUrl } from "@/lib/db";
+import { getSetting, publicLinkKind, resolveBaseUrl } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +17,14 @@ export default async function SettingsPage() {
       <div>
         <h1 className="font-display text-4xl tracking-tight">Settings</h1>
         <p className="mt-1 max-w-xl text-muted-foreground">
-          Point printed QR codes at the address phones will use on site.
+          Point printed QR codes at an address people can open from any network, including cellular.
         </p>
       </div>
-      <AdminSettings baseUrl={baseUrl} resolvedBaseUrl={resolvedBaseUrl} local={isLocalHost(resolvedBaseUrl)} />
+      <AdminSettings
+        baseUrl={baseUrl}
+        resolvedBaseUrl={resolvedBaseUrl}
+        linkKind={publicLinkKind(resolvedBaseUrl)}
+      />
     </div>
   );
 }

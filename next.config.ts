@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   // still send Origin 127.0.0.1 (or a LAN host). Next only allows the bind
   // hostname unless it is listed here, and a blocked dev socket prevents the
   // page from becoming interactive.
-  allowedDevOrigins: ["127.0.0.1"],
+  allowedDevOrigins: ["127.0.0.1", "*.trycloudflare.com"],
   experimental: {
     // Next 16 enables this by default. Hydration then waits on the dev
     // socket; if that socket is blocked, buttons and forms never attach.
