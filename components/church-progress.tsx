@@ -1,28 +1,20 @@
 import type { ChurchProgress } from "@/lib/types";
 
 export function ChurchProgressStrip({ churches }: { churches: ChurchProgress[] }) {
-  const personal = churches.some((group) => group.yours);
-
   return (
     <section aria-label="People met from each church" className="grid grid-cols-3 gap-2">
       {churches.map((group) => (
         <div key={group.church} className="rounded-2xl border border-border bg-card px-2 py-3 text-center">
           <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">{group.church}</p>
-          {personal ? (
-            <p
-              className="mt-1 font-display text-3xl leading-none tracking-tight"
-              aria-label={`${group.met} of ${group.pool} ${group.church} attendees you can meet`}
-            >
-              {group.met}
-              <span className="text-muted-foreground">/{group.pool}</span>
-            </p>
-          ) : (
-            <p className="mt-1 font-display text-3xl leading-none tracking-tight" aria-label={`${group.headcount} ${group.church} attendees`}>
-              {group.headcount}
-            </p>
-          )}
+          <p
+            className="mt-1 font-display text-3xl leading-none tracking-tight"
+            aria-label={`${group.met} of ${group.pool} ${group.church} people to meet${group.yours ? ", excluding you" : ""}`}
+          >
+            {group.met}
+            <span className="text-muted-foreground">/{group.pool}</span>
+          </p>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            {personal ? (group.yours ? "your church" : "you can meet") : group.headcount === 1 ? "attendee" : "attendees"}
+            {group.yours ? "excluding you" : `${group.headcount} ${group.headcount === 1 ? "attendee" : "attendees"}`}
           </p>
         </div>
       ))}
