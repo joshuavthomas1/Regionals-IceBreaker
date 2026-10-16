@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiError, deleteJson, patchJson, postJson } from "@/lib/api-client";
+import { CHURCHES, type Church } from "@/lib/churches";
 import { slugify } from "@/lib/codes";
 import type { Attendee } from "@/lib/types";
 
@@ -24,7 +25,7 @@ export function AdminPeople({ attendees }: { attendees: Attendee[] }) {
     const needle = query.trim().toLowerCase();
     if (!needle) return attendees;
     return attendees.filter((attendee) =>
-      [attendee.name, attendee.company, attendee.title, attendee.code]
+      [attendee.name, attendee.company, attendee.title, attendee.church, attendee.code]
         .join(" ")
         .toLowerCase()
         .includes(needle),
@@ -69,7 +70,7 @@ export function AdminPeople({ attendees }: { attendees: Attendee[] }) {
       <section className="rounded-2xl border border-border bg-card p-4">
         <h2 className="font-display text-2xl tracking-tight">Import a CSV</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Columns: name, company, title, fun_fact. Only name is required.
+          Columns: name, company, title, fun_fact, church. Church is DMTC, CMTC, or STMTC. Name and church are required.
         </p>
         <a href="/attendees-template.csv" className="mt-2 inline-block text-sm text-primary underline-offset-4 hover:underline">
           Download a template
@@ -122,7 +123,7 @@ export function AdminPeople({ attendees }: { attendees: Attendee[] }) {
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search name, company, or code"
+          placeholder="Search name, church, company, or code"
           aria-label="Search attendees"
           className={fieldClass}
         />
@@ -152,7 +153,14 @@ export function AdminPeople({ attendees }: { attendees: Attendee[] }) {
                 ) : (
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">{attendee.name}</p>
+                      <p className="truncate font-medium">
+                        {attendee.name}
+                        {attendee.church ? (
+                          <span className="ml-2 text-xs font-medium tracking-[0.14em] text-primary uppercase">
+                            {attendee.church}
+                          </span>
+                        ) : null}
+                      </p>
                       <p className="truncate text-sm text-muted-foreground">
                         {[attendee.title, attendee.company].filter(Boolean).join(" · ") || "No company yet"}
                       </p>
@@ -201,11 +209,12 @@ function AddForm({
   onAdd,
 }: {
   pending: boolean;
-  onAdd: (input: { name: string; company: string; title: string; funFact: string }) => Promise<boolean>;
+  onAdd: (input: { name: string; company: string; title: string; church: Church; funFact: string }) => Promise<boolean>;
 }) {
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [title, setTitle] = useState("");
+  const [church, setChurch] = useState<Church | "">("");
   const [funFact, setFunFact] = useState("");
 
   return (
@@ -213,15 +222,18 @@ function AddForm({
       className="grid gap-3"
       onSubmit={async (event) => {
         event.preventDefault();
-        const saved = await onAdd({ name, company, title, funFact });
+        if (!church) return;
+        const saved = await onAdd({ name, company, title, church, funFact });
         if (!saved) return;
         setName("");
         setCompany("");
         setTitle("");
+        setChurch("");
         setFunFact("");
       }}
     >
       <Field id="add-name" label="Name" value={name} onChange={setName} required />
+      <ChurchField id="add-church" value={church} onChange={setChurch} />
       <div className="grid gap-3 sm:grid-cols-2">
         <Field id="add-company" label="Company" value={company} onChange={setCompany} />
         <Field id="add-title" label="Title" value={title} onChange={setTitle} />
@@ -251,12 +263,13 @@ function EditForm({
 }: {
   attendee: Attendee;
   pending: boolean;
-  onSave: (input: { name: string; company: string; title: string; funFact: string }) => void;
+  onSave: (input: { name: string; company: string; title: string; church: Church; funFact: string }) => void;
   onCancel: () => void;
 }) {
   const [name, setName] = useState(attendee.name);
   const [company, setCompany] = useState(attendee.company);
   const [title, setTitle] = useState(attendee.title);
+  const [church, setChurch] = useState<Church | "">(attendee.church);
   const [funFact, setFunFact] = useState(attendee.funFact);
 
   return (
@@ -264,10 +277,12 @@ function EditForm({
       className="grid gap-3"
       onSubmit={(event) => {
         event.preventDefault();
-        onSave({ name, company, title, funFact });
+        if (!church) return;
+        onSave({ name, company, title, church, funFact });
       }}
     >
       <Field id={`name-${attendee.id}`} label="Name" value={name} onChange={setName} required />
+      <ChurchField id={`church-${attendee.id}`} value={church} onChange={setChurch} />
       <Field id={`company-${attendee.id}`} label="Company" value={company} onChange={setCompany} />
       <Field id={`title-${attendee.id}`} label="Title" value={title} onChange={setTitle} />
       <div className="flex flex-col gap-2">
@@ -321,6 +336,38 @@ function CsvForm({ pending, onImport }: { pending: boolean; onImport: (csv: stri
         Import attendees
       </Button>
     </form>
+  );
+}
+
+function ChurchField({
+  id,
+  value,
+  onChange,
+}: {
+  id: string;
+  value: Church | "";
+  onChange: (value: Church | "") => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={id}>Church</Label>
+      <select
+        id={id}
+        required
+        value={value}
+        onChange={(event) => onChange(event.target.value as Church | "")}
+        className={`${fieldClass} w-full`}
+      >
+        <option value="" disabled>
+          Choose a church
+        </option>
+        {CHURCHES.map((church) => (
+          <option key={church} value={church}>
+            {church}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 

@@ -1,3 +1,4 @@
+import { requireChurch } from "@/lib/churches";
 import { isAdmin } from "@/lib/auth";
 import { addAttendee } from "@/lib/db";
 import { asString, jsonError, readJson } from "@/lib/http";
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
       name,
       company: asString(body?.company),
       title: asString(body?.title),
+      church: requireChurch(asString(body?.church)),
       funFact: asString(body?.funFact),
     });
     return Response.json({ attendee });

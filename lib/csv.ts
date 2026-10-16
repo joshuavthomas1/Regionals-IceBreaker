@@ -1,3 +1,4 @@
+import { parseChurch } from "@/lib/churches";
 import type { NewAttendee } from "@/lib/types";
 
 export type CsvParse = {
@@ -17,7 +18,15 @@ export function parseCsv(text: string): CsvParse {
   if (nameIdx < 0) {
     return {
       rows: [],
-      errors: ["The first row needs a name column: name,company,title,fun_fact"],
+      errors: ["The first row needs a name column: name,company,title,fun_fact,church"],
+    };
+  }
+
+  const churchIdx = header.indexOf("church");
+  if (churchIdx < 0) {
+    return {
+      rows: [],
+      errors: ["The first row needs a church column: name,company,title,fun_fact,church"],
     };
   }
 
@@ -35,10 +44,16 @@ export function parseCsv(text: string): CsvParse {
       errors.push(`Row ${i + 1} is missing a name.`);
       continue;
     }
+    const church = parseChurch(cells[churchIdx] ?? "");
+    if (!church) {
+      errors.push(`Row ${i + 1} needs a church: DMTC, CMTC, or STMTC.`);
+      continue;
+    }
     rows.push({
       name,
       company: companyIdx >= 0 ? (cells[companyIdx] ?? "").trim() : "",
       title: titleIdx >= 0 ? (cells[titleIdx] ?? "").trim() : "",
+      church,
       funFact: factIdx >= 0 ? (cells[factIdx] ?? "").trim() : "",
     });
   }

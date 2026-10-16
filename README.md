@@ -19,7 +19,7 @@ Attendees, meetings, and check-ins are stored in `data/icebreaker.sqlite`.
 
 On the badge desk:
 
-1. Add people one at a time, or import a CSV with the header `name,company,title,fun_fact`. Only `name` is required. A template is linked on the page.
+1. Add people one at a time, or import a CSV with the header `name,company,title,fun_fact,church`. Church is `DMTC`, `CMTC`, or `STMTC`. Only `name` and `church` are required. A template is linked on the page.
 2. Or load the sample attendees for a dry run.
 3. Set the public link in Settings to the address phones will actually open, such as `https://icebreaker.example.com`. QR codes use that link. The print page warns you if they still point at localhost.
 4. Open Print and use the browser print dialog to save a PDF for name tags. Each person also has a PNG download.
@@ -29,7 +29,7 @@ On the badge desk:
 1. Check in once on their phone with the short code under their QR, or by scanning their own badge.
 2. Scan other people's badges with the phone camera. The QR is a normal link, so no app install is needed.
 3. The first scan of a pair counts for both people. Scanning yourself does nothing. Scanning the same person again does not add another point.
-4. The board on the home page refreshes every few seconds.
+4. The board on the home page refreshes every few seconds. Scores are a fraction: people met over the other people in the room. DMTC, CMTC, and STMTC each have their own fraction at the top.
 
 The in-page camera needs HTTPS, or localhost. Printed QR codes work from the phone's camera either way.
 

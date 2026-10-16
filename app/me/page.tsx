@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ChurchProgressStrip, MetFraction } from "@/components/church-progress";
 import { LogoutButton } from "@/components/logout-button";
 import { SiteShell } from "@/components/site-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentAttendee } from "@/lib/auth";
-import { listMeetingsFor } from "@/lib/db";
-import { formatWhen, peopleLabel } from "@/lib/format";
+import { getBoard, listMeetingsFor } from "@/lib/db";
+import { formatWhen } from "@/lib/format";
 import { cn } from "cn";
 
 export const dynamic = "force-dynamic";
@@ -35,18 +36,23 @@ export default async function MePage() {
   }
 
   const meetings = listMeetingsFor(attendee.id);
+  const board = getBoard(attendee.id);
 
   return (
     <SiteShell>
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-3">
-          <p className="text-xs font-medium tracking-[0.18em] text-primary uppercase">You</p>
-          <h1 className="font-display text-4xl leading-none tracking-tight">{attendee.name}</h1>
-          <p className="text-muted-foreground">
-            {[attendee.title, attendee.company].filter(Boolean).join(" · ") || "Checked in"}
-            {meetings.length > 0 ? ` · ${peopleLabel(meetings.length)} met` : ""}
-          </p>
+        <div className="flex items-end justify-between gap-3">
+          <div className="flex flex-col gap-3">
+            <p className="text-xs font-medium tracking-[0.18em] text-primary uppercase">You</p>
+            <h1 className="font-display text-4xl leading-none tracking-tight">{attendee.name}</h1>
+            <p className="text-muted-foreground">
+              {[attendee.church, attendee.title, attendee.company].filter(Boolean).join(" · ") || "Checked in"}
+            </p>
+          </div>
+          <MetFraction met={meetings.length} total={board.others} size="place" />
         </div>
+
+        <ChurchProgressStrip churches={board.churches} />
 
         {meetings.length === 0 ? (
           <section className="rounded-2xl border border-dashed border-border bg-card px-4 py-8 text-center">
@@ -67,7 +73,7 @@ export default async function MePage() {
                   <p className="shrink-0 text-xs text-muted-foreground">{formatWhen(person.metAt)}</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {[person.title, person.company].filter(Boolean).join(" · ")}
+                  {[person.church, person.title, person.company].filter(Boolean).join(" · ")}
                 </p>
                 {person.funFact ? <p className="mt-2 text-sm">&ldquo;{person.funFact}&rdquo;</p> : null}
               </li>

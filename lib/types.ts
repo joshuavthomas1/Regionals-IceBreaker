@@ -1,8 +1,11 @@
+import type { Church } from "@/lib/churches";
+
 export type Person = {
   id: number;
   name: string;
   company: string;
   title: string;
+  church: Church | "";
   funFact: string;
 };
 
@@ -16,8 +19,16 @@ export type BoardRow = {
   name: string;
   company: string;
   title: string;
+  church: Church | "";
   score: number;
   rank: number;
+};
+
+export type ChurchProgress = {
+  church: Church;
+  met: number;
+  pool: number;
+  headcount: number;
 };
 
 export type YouSpot = {
@@ -40,6 +51,8 @@ export type BoardSnapshot = {
   recent: RecentMeet[];
   attendeeCount: number;
   meetingCount: number;
+  others: number;
+  churches: ChurchProgress[];
   truncated: boolean;
 };
 
@@ -68,5 +81,6 @@ export type NewAttendee = {
   name: string;
   company: string;
   title: string;
+  church: Church;
   funFact: string;
 };

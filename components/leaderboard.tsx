@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ChurchProgressStrip, MetFraction } from "@/components/church-progress";
 import { buttonVariants } from "@/components/ui/button";
-import { formatWhen, ordinal, peopleLabel } from "@/lib/format";
+import { formatWhen, ordinal } from "@/lib/format";
 import type { BoardSnapshot } from "@/lib/types";
 import { cn } from "cn";
 
@@ -58,12 +59,14 @@ export function Leaderboard({ initial }: { initial: BoardSnapshot }) {
           Who&apos;s met the most people?
         </h1>
         <p className="max-w-md text-base text-muted-foreground">
-          Scan a badge. Both of you move up.{" "}
+          Scan a badge. Both of you move up. The score is people met over everyone else still in the room.
           {board.attendeeCount > 0
-            ? `${board.attendeeCount} ${board.attendeeCount === 1 ? "badge" : "badges"} in the room, ${board.meetingCount} ${board.meetingCount === 1 ? "meeting" : "meetings"}.`
-            : "Badges go up once the desk adds the room."}
+            ? ` ${board.attendeeCount} ${board.attendeeCount === 1 ? "badge" : "badges"}, ${board.meetingCount} ${board.meetingCount === 1 ? "meeting" : "meetings"}.`
+            : " Badges go up once the desk adds the room."}
         </p>
       </div>
+
+      <ChurchProgressStrip churches={board.churches} />
 
       {error ? (
         <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive" role="status">
@@ -74,10 +77,12 @@ export function Leaderboard({ initial }: { initial: BoardSnapshot }) {
       {you ? (
         <section className="rounded-2xl border border-primary/30 bg-card px-4 py-4">
           <p className="text-xs font-medium tracking-[0.16em] text-primary uppercase">Your place</p>
-          <p className="mt-1 font-display text-2xl tracking-tight">{you.name}</p>
+          <div className="mt-2 flex items-end justify-between gap-3">
+            <p className="font-display text-2xl tracking-tight">{you.name}</p>
+            <MetFraction met={you.score} total={board.others} size="place" />
+          </div>
           {you.score > 0 ? (
             <p className="mt-1 text-sm text-muted-foreground">
-              You&apos;ve met {peopleLabel(you.score)}.{" "}
               {you.rank === 1 ? "You're in the lead." : `${ordinal(you.rank)} place.`}
             </p>
           ) : (
@@ -144,15 +149,10 @@ export function Leaderboard({ initial }: { initial: BoardSnapshot }) {
                     {mine ? <span className="text-primary"> · you</span> : null}
                   </span>
                   <span className="block truncate text-sm text-muted-foreground">
-                    {[row.title, row.company].filter(Boolean).join(" · ") || "In the room"}
+                    {[row.church, row.title, row.company].filter(Boolean).join(" · ") || "In the room"}
                   </span>
                 </span>
-                <span className="text-right">
-                  <span className="block font-display text-2xl leading-none">{row.score}</span>
-                  <span className="text-[11px] tracking-wide text-muted-foreground uppercase">
-                    met
-                  </span>
-                </span>
+                <MetFraction met={row.score} total={board.others} />
               </li>
             );
           })}

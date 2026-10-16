@@ -56,6 +56,9 @@ export default async function PrintPage() {
             <article key={badge.id} className="badge-card">
               <div className="min-w-0 flex-1">
                 <p className="font-display text-2xl leading-tight tracking-tight">{badge.name}</p>
+                {badge.church ? (
+                  <p className="mt-1 text-xs font-medium tracking-[0.16em] text-primary uppercase">{badge.church}</p>
+                ) : null}
                 {badge.company ? <p className="mt-1 text-sm">{badge.company}</p> : null}
                 {badge.title ? <p className="text-sm text-muted-foreground">{badge.title}</p> : null}
               </div>

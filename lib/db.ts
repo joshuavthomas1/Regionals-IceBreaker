@@ -2,11 +2,13 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import Database from "better-sqlite3";
+import { CHURCHES, requireChurch, type Church } from "@/lib/churches";
 import { normalizeCode } from "@/lib/codes";
 import { sampleAttendees } from "@/lib/sample";
 import type {
   Attendee,
   BoardSnapshot,
+  ChurchProgress,
   MeetingPayload,
   MetPerson,
   NewAttendee,
@@ -18,6 +20,7 @@ type AttendeeRow = {
   name: string;
   company: string;
   title: string;
+  church: string;
   fun_fact: string;
   code: string;
   created_at: string;
@@ -38,6 +41,7 @@ function mapAttendee(row: AttendeeRow): Attendee {
     name: row.name,
     company: row.company,
     title: row.title,
+    church: storedChurch(row.church),
     funFact: row.fun_fact,
     code: row.code,
     createdAt: row.created_at,
@@ -50,6 +54,7 @@ function toPerson(attendee: Attendee): Person {
     name: attendee.name,
     company: attendee.company,
     title: attendee.title,
+    church: attendee.church,
     funFact: attendee.funFact,
   };
 }
@@ -61,6 +66,7 @@ function migrate(db: Database.Database) {
       name TEXT NOT NULL,
       company TEXT NOT NULL DEFAULT '',
       title TEXT NOT NULL DEFAULT '',
+      church TEXT NOT NULL DEFAULT '',
       fun_fact TEXT NOT NULL DEFAULT '',
       code TEXT NOT NULL UNIQUE COLLATE NOCASE,
       created_at TEXT NOT NULL
@@ -90,6 +96,32 @@ function migrate(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_meetings_scanned ON meetings(scanned_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_attendee ON sessions(attendee_id);
   `);
+  ensureChurch(db);
+}
+
+function storedChurch(value: string): Church | "" {
+  return (CHURCHES as readonly string[]).includes(value) ? (value as Church) : "";
+}
+
+function ensureChurch(db: Database.Database) {
+  const columns = db.prepare("PRAGMA table_info(attendees)").all() as Array<{ name: string }>;
+  if (!columns.some((column) => column.name === "church")) {
+    db.exec("ALTER TABLE attendees ADD COLUMN church TEXT NOT NULL DEFAULT ''");
+  }
+  const blank = db.prepare("SELECT COUNT(*) AS count FROM attendees WHERE church = ''").get() as {
+    count: number;
+  };
+  if (blank.count === 0) return;
+  const assign = db.prepare(
+    "UPDATE attendees SET church = ? WHERE church = '' AND name = ? COLLATE NOCASE",
+  );
+  const known: Record<string, Church> = {
+    "Rowan Blake": "DMTC",
+    "Mina Cho": "CMTC",
+    "Noor El-Sayed": "STMTC",
+  };
+  for (const person of sampleAttendees) known[person.name] = person.church;
+  for (const [name, church] of Object.entries(known)) assign.run(church, name);
 }
 
 export function getDb() {
@@ -104,6 +136,7 @@ export function getDb() {
     migrate(db);
     globalForDb.icebreaker = db;
   }
+  ensureChurch(globalForDb.icebreaker);
   return globalForDb.icebreaker;
 }
 
@@ -147,18 +180,26 @@ export function addAttendee(input: NewAttendee) {
   const createdAt = new Date().toISOString();
   const info = db
     .prepare(
-      `INSERT INTO attendees (name, company, title, fun_fact, code, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO attendees (name, company, title, church, fun_fact, code, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
     )
-    .run(name, clip(input.company, 80), clip(input.title, 80), clip(input.funFact, 180), uniqueCode(db), createdAt);
+    .run(
+      name,
+      clip(input.company, 80),
+      clip(input.title, 80),
+      requireChurch(input.church),
+      clip(input.funFact, 180),
+      uniqueCode(db),
+      createdAt,
+    );
   return findAttendeeById(Number(info.lastInsertRowid))!;
 }
 
 export function importAttendees(rows: NewAttendee[]) {
   const db = getDb();
   const insert = db.prepare(
-    `INSERT INTO attendees (name, company, title, fun_fact, code, created_at)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO attendees (name, company, title, church, fun_fact, code, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
   );
   const run = db.transaction((items: NewAttendee[]) => {
     let added = 0;
@@ -169,6 +210,7 @@ export function importAttendees(rows: NewAttendee[]) {
         name,
         clip(item.company, 80),
         clip(item.title, 80),
+        requireChurch(item.church),
         clip(item.funFact, 180),
         uniqueCode(db),
         new Date().toISOString(),
@@ -188,14 +230,21 @@ export function loadSampleAttendees() {
 
 export function updateAttendee(id: number, input: NewAttendee) {
   const name = clip(input.name, 80);
-  if (!name) return null;
+  if (!name) throw new Error("A name is required.");
   const result = getDb()
     .prepare(
       `UPDATE attendees
-       SET name = ?, company = ?, title = ?, fun_fact = ?
+       SET name = ?, company = ?, title = ?, church = ?, fun_fact = ?
        WHERE id = ?`,
     )
-    .run(name, clip(input.company, 80), clip(input.title, 80), clip(input.funFact, 180), id);
+    .run(
+      name,
+      clip(input.company, 80),
+      clip(input.title, 80),
+      requireChurch(input.church),
+      clip(input.funFact, 180),
+      id,
+    );
   if (result.changes === 0) return null;
   return findAttendeeById(id);
 }
@@ -294,6 +343,7 @@ export function listMeetingsFor(attendeeId: number): MetPerson[] {
          o.name,
          o.company,
          o.title,
+         o.church,
          o.fun_fact,
          m.created_at
        FROM meetings m
@@ -309,6 +359,7 @@ export function listMeetingsFor(attendeeId: number): MetPerson[] {
     name: string;
     company: string;
     title: string;
+    church: string;
     fun_fact: string;
     created_at: string;
   }>;
@@ -318,6 +369,7 @@ export function listMeetingsFor(attendeeId: number): MetPerson[] {
     name: row.name,
     company: row.company,
     title: row.title,
+    church: storedChurch(row.church),
     funFact: row.fun_fact,
     metAt: row.created_at,
   }));
@@ -332,6 +384,7 @@ export function getBoard(youId: number | null): BoardSnapshot {
          a.name,
          a.company,
          a.title,
+         a.church,
          (
            SELECT COUNT(*)
            FROM meetings m
@@ -345,6 +398,7 @@ export function getBoard(youId: number | null): BoardSnapshot {
     name: string;
     company: string;
     title: string;
+    church: string;
     score: number;
   }>;
 
@@ -357,7 +411,7 @@ export function getBoard(youId: number | null): BoardSnapshot {
       rank = seen;
       lastScore = row.score;
     }
-    return { ...row, rank };
+    return { ...row, church: storedChurch(row.church), rank };
   });
 
   const active = ranked.filter((row) => row.score > 0);
@@ -384,16 +438,60 @@ export function getBoard(youId: number | null): BoardSnapshot {
     count: number;
   };
 
+  const count = attendeeCount.count;
   return {
     leaders: active.slice(0, BOARD_LIMIT),
     you: youRow
       ? { id: youRow.id, name: youRow.name, score: youRow.score, rank: youRow.rank }
       : null,
     recent,
-    attendeeCount: attendeeCount.count,
+    attendeeCount: count,
     meetingCount: meetingCount.count,
+    others: Math.max(0, count - 1),
+    churches: churchProgress(db, youId),
     truncated: active.length > BOARD_LIMIT,
   };
+}
+
+function churchProgress(db: Database.Database, youId: number | null): ChurchProgress[] {
+  const counts = db.prepare("SELECT church, COUNT(*) AS headcount FROM attendees GROUP BY church").all() as Array<{
+    church: string;
+    headcount: number;
+  }>;
+  const headcounts = new Map(counts.map((row) => [row.church, row.headcount]));
+  let viewerChurch = "";
+  const metByChurch = new Map<string, number>();
+
+  if (youId != null) {
+    const self = db.prepare("SELECT church FROM attendees WHERE id = ?").get(youId) as
+      | { church: string }
+      | undefined;
+    viewerChurch = self?.church ?? "";
+    const mets = db
+      .prepare(
+        `SELECT o.church AS church, COUNT(*) AS met
+         FROM meetings m
+         JOIN attendees o ON o.id = CASE
+           WHEN m.scanner_id = ? THEN m.scanned_id
+           ELSE m.scanner_id
+         END
+         WHERE m.scanner_id = ? OR m.scanned_id = ?
+         GROUP BY o.church`,
+      )
+      .all(youId, youId, youId) as Array<{ church: string; met: number }>;
+    for (const row of mets) metByChurch.set(row.church, row.met);
+  }
+
+  return CHURCHES.map((church) => {
+    const headcount = headcounts.get(church) ?? 0;
+    const pool = Math.max(0, headcount - (viewerChurch === church ? 1 : 0));
+    return {
+      church,
+      met: Math.min(metByChurch.get(church) ?? 0, pool),
+      pool,
+      headcount,
+    };
+  });
 }
 
 export function getSetting(key: string) {

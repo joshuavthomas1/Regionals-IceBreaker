@@ -72,7 +72,7 @@ export function Arrival({
     setPhase(fromMeeting(result.meeting, person.name));
   }
 
-  const detail = [person.title, person.company].filter(Boolean).join(" · ");
+  const detail = [person.church, person.title, person.company].filter(Boolean).join(" · ");
 
   return (
     <article className="flex flex-col gap-6">

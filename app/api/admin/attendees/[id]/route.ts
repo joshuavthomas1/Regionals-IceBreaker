@@ -1,4 +1,5 @@
 import { isAdmin } from "@/lib/auth";
+import { requireChurch } from "@/lib/churches";
 import { deleteAttendee, updateAttendee } from "@/lib/db";
 import { asString, jsonError, readJson } from "@/lib/http";
 
@@ -18,14 +19,20 @@ export async function PATCH(request: Request, { params }: Context) {
   if (!id) return jsonError("That attendee is missing.", 404);
 
   const body = await readJson(request);
-  const attendee = updateAttendee(id, {
-    name: asString(body?.name),
-    company: asString(body?.company),
-    title: asString(body?.title),
-    funFact: asString(body?.funFact),
-  });
-  if (!attendee) return jsonError("A name is required.", 400);
-  return Response.json({ attendee });
+  try {
+    const attendee = updateAttendee(id, {
+      name: asString(body?.name),
+      company: asString(body?.company),
+      title: asString(body?.title),
+      church: requireChurch(asString(body?.church)),
+      funFact: asString(body?.funFact),
+    });
+    if (!attendee) return jsonError("That attendee is missing.", 404);
+    return Response.json({ attendee });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Couldn't update that attendee.";
+    return jsonError(message, 400);
+  }
 }
 
 export async function DELETE(_request: Request, { params }: Context) {
