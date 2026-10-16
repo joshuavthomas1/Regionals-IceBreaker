@@ -29,7 +29,7 @@ On the badge desk:
 1. Check in once on their phone with the short code under their QR, or by scanning their own badge.
 2. Scan other people's badges with the phone camera. The QR is a normal link, so no app install is needed.
 3. The first scan of a pair counts for both people. Scanning yourself does nothing. Scanning the same person again does not add another point.
-4. The board on the home page refreshes every few seconds. Scores are a fraction: people met over the people in the room. DMTC, CMTC, and STMTC each have their own fraction at the top, and those three denominators add up to the overall total.
+4. The board on the home page refreshes every few seconds. A score is people met over everyone else on the list. Your own church leaves you out of its denominator, and the three church denominators add up to your overall total.
 
 The in-page camera needs HTTPS, or localhost. Printed QR codes work from the phone's camera either way.
 

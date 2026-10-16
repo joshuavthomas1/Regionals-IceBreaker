@@ -444,7 +444,7 @@ export function getBoard(youId: number | null): BoardSnapshot {
     recent,
     attendeeCount: count,
     meetingCount: meetingCount.count,
-    others: churches.reduce((sum, group) => sum + group.pool, 0),
+    others: Math.max(0, count - 1),
     churches,
     truncated: active.length > BOARD_LIMIT,
   };
@@ -457,8 +457,13 @@ function churchProgress(db: Database.Database, youId: number | null): ChurchProg
   }>;
   const headcounts = new Map(counts.map((row) => [row.church, row.headcount]));
   const metByChurch = new Map<string, number>();
+  let viewerChurch = "";
 
   if (youId != null) {
+    const self = db.prepare("SELECT church FROM attendees WHERE id = ?").get(youId) as
+      | { church: string }
+      | undefined;
+    viewerChurch = self?.church ?? "";
     const mets = db
       .prepare(
         `SELECT o.church AS church, COUNT(*) AS met
@@ -476,11 +481,14 @@ function churchProgress(db: Database.Database, youId: number | null): ChurchProg
 
   return CHURCHES.map((church) => {
     const headcount = headcounts.get(church) ?? 0;
+    const yours = viewerChurch === church && viewerChurch !== "";
+    const pool = Math.max(0, headcount - (yours ? 1 : 0));
     return {
       church,
-      met: metByChurch.get(church) ?? 0,
-      pool: headcount,
+      met: Math.min(metByChurch.get(church) ?? 0, pool),
+      pool,
       headcount,
+      yours,
     };
   });
 }

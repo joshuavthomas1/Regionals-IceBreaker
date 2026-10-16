@@ -27,6 +27,7 @@ export type ChurchProgress = {
   met: number;
   pool: number;
   headcount: number;
+  yours: boolean;
 };
 
 export type YouSpot = {
