@@ -132,6 +132,13 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_meetings_scanner ON meetings(scanner_id);
     CREATE INDEX IF NOT EXISTS idx_meetings_scanned ON meetings(scanned_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_attendee ON sessions(attendee_id);
+
+    ALTER TABLE attendees ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE meetings ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+
+    REVOKE ALL ON TABLE attendees, meetings, sessions, settings FROM anon, authenticated;
   `);
   await backfillChurches(sql);
 }
