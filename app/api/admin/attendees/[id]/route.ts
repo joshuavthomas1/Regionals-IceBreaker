@@ -20,7 +20,7 @@ export async function PATCH(request: Request, { params }: Context) {
 
   const body = await readJson(request);
   try {
-    const attendee = updateAttendee(id, {
+    const attendee = await updateAttendee(id, {
       name: asString(body?.name),
       company: asString(body?.company),
       title: asString(body?.title),
@@ -39,6 +39,6 @@ export async function DELETE(_request: Request, { params }: Context) {
   if (!(await isAdmin())) return jsonError("The badge desk is locked.", 401);
   const id = parseId((await params).id);
   if (!id) return jsonError("That attendee is missing.", 404);
-  if (!deleteAttendee(id)) return jsonError("That attendee is already gone.", 404);
+  if (!(await deleteAttendee(id))) return jsonError("That attendee is already gone.", 404);
   return Response.json({ ok: true });
 }

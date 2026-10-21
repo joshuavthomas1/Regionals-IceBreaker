@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PrintPage() {
-  const attendees = listAttendees();
+  const attendees = await listAttendees();
   const baseUrl = await resolveBaseUrl();
   const linkKind = publicLinkKind(baseUrl);
   const badges = await Promise.all(

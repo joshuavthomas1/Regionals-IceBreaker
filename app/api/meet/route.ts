@@ -15,5 +15,5 @@ export async function POST(request: Request) {
   const code = extractCode(asString(body?.code));
   if (!code) return jsonError("That badge code didn't read. Try the scan again.", 400);
 
-  return Response.json(recordMeeting(attendee.id, code));
+  return Response.json(await recordMeeting(attendee.id, code));
 }

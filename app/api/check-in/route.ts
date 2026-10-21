@@ -15,13 +15,13 @@ export async function POST(request: Request) {
   const code = extractCode(asString(body?.code));
   if (!code) return jsonError("Enter the code printed under your QR.", 400);
 
-  const attendee = findAttendeeByCode(code);
+  const attendee = await findAttendeeByCode(code);
   if (!attendee) return jsonError("That code is not on the list.", 404);
 
   await startAttendeeSession(attendee.id, request);
 
   const meetCode = asString(body?.meetCode).trim();
-  const meeting = meetCode ? recordMeeting(attendee.id, meetCode) : null;
+  const meeting = meetCode ? await recordMeeting(attendee.id, meetCode) : null;
 
   return Response.json({
     attendee: {

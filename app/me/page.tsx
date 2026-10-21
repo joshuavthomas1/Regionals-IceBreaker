@@ -35,8 +35,7 @@ export default async function MePage() {
     );
   }
 
-  const meetings = listMeetingsFor(attendee.id);
-  const board = getBoard(attendee.id);
+  const [meetings, board] = await Promise.all([listMeetingsFor(attendee.id), getBoard(attendee.id)]);
 
   return (
     <SiteShell>

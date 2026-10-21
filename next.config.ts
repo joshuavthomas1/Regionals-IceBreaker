@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["better-sqlite3"],
   // Dev is bound to 0.0.0.0 so phones on the LAN can reach the desk. Browsers
   // still send Origin 127.0.0.1 (or a LAN host). Next only allows the bind
   // hostname unless it is listed here, and a blocked dev socket prevents the

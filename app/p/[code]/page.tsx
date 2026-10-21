@@ -14,12 +14,12 @@ export async function generateMetadata({
 }: {
   params: Promise<{ code: string }>;
 }): Promise<Metadata> {
-  const attendee = findAttendeeByCode((await params).code);
+  const attendee = await findAttendeeByCode((await params).code);
   return { title: attendee ? attendee.name : "Unknown badge" };
 }
 
 export default async function BadgePage({ params }: { params: Promise<{ code: string }> }) {
-  const attendee = findAttendeeByCode((await params).code);
+  const attendee = await findAttendeeByCode((await params).code);
 
   if (!attendee) {
     return (

@@ -13,18 +13,17 @@ Open [http://127.0.0.1:3847](http://127.0.0.1:3847).
 
 The badge desk is at [http://127.0.0.1:3847/admin](http://127.0.0.1:3847/admin). The local password is `badge-desk` unless you set `ADMIN_PASSWORD` (see `.env.example`). Change it before a real event.
 
-Attendees, meetings, and check-ins are stored in `data/icebreaker.sqlite`.
+Attendees, meetings, and check-ins are stored in Supabase. Copy `.env.example` to `.env` and set `DATABASE_URL` to the Supabase pooler connection string (port 6543) before starting the app.
 
-## Reach phones that are not on your Wi-Fi
+## Stay online without a laptop
 
-The site runs on one computer, and that computer needs internet. Everyone else's phone can be on cellular data or another network.
+1. Create a Supabase project and put its pooler connection string in `DATABASE_URL`.
+2. Import this repo on Vercel and add `DATABASE_URL` and `ADMIN_PASSWORD` as environment variables.
+3. Deploy. Open `/admin` on the Vercel address, set the public link to that same `https://….vercel.app` address, then print badges.
 
-1. Start the site with `npm run dev`. For the event, `npm run build` and then `npm start` is steadier.
-2. In a second terminal, run `npm run share` and leave it running.
-3. That prints a public https address and saves it as the badge link.
-4. Print badges after that address is up.
+That address stays up when your laptop is off. A free Supabase project goes to sleep after about a week of nobody using it, so open the project in the Supabase dashboard a day or two before the event.
 
-Stopping `npm run share` closes the public address. The next run gets a different address, so print the badges again if you restart it. Scans stay in `data/icebreaker.sqlite` on the computer that is running the site.
+`npm run share` is only for a temporary public link from a computer you leave running. The Vercel address is the one to print on badges.
 
 ## Add the room
 

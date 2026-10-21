@@ -13,6 +13,6 @@ export async function POST(request: Request) {
     return jsonError("Use a full link, like https://icebreaker.example.com.", 400);
   }
 
-  setSetting("baseUrl", normalized);
+  await setSetting("baseUrl", normalized);
   return Response.json({ baseUrl: normalized });
 }

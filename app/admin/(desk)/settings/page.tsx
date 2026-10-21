@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SettingsPage() {
-  const baseUrl = getSetting("baseUrl");
+  const baseUrl = await getSetting("baseUrl");
   const resolvedBaseUrl = await resolveBaseUrl();
 
   return (

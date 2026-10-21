@@ -10,11 +10,11 @@ export async function POST(request: Request) {
   const body = await readJson(request);
   const scope = asString(body?.scope);
   if (scope === "meetings") {
-    clearMeetings();
+    await clearMeetings();
     return Response.json({ ok: true });
   }
   if (scope === "all") {
-    resetEvent();
+    await resetEvent();
     return Response.json({ ok: true });
   }
   return jsonError("Choose what to clear.", 400);

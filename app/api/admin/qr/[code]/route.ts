@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export async function GET(_request: Request, { params }: { params: Promise<{ code: string }> }) {
   if (!(await isAdmin())) return jsonError("The badge desk is locked.", 401);
 
-  const attendee = findAttendeeByCode((await params).code);
+  const attendee = await findAttendeeByCode((await params).code);
   if (!attendee) return jsonError("That badge is not in the room.", 404);
 
   const png = await qrPng(badgeUrl(await resolveBaseUrl(), attendee.code));

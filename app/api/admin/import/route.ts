@@ -23,6 +23,6 @@ export async function POST(request: Request) {
     return jsonError(parsed.errors[0] ?? "No attendees were found.", 400);
   }
 
-  const added = importAttendees(parsed.rows);
+  const added = await importAttendees(parsed.rows);
   return Response.json({ added, errors: parsed.errors.slice(0, 8) });
 }

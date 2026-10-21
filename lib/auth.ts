@@ -39,11 +39,11 @@ function cookieBase(request: Request, maxAge: number) {
 
 export async function getCurrentAttendee() {
   const jar = await cookies();
-  return attendeeForToken(jar.get(SESSION_COOKIE)?.value);
+  return await attendeeForToken(jar.get(SESSION_COOKIE)?.value);
 }
 
 export async function startAttendeeSession(attendeeId: number, request: Request) {
-  const token = createSession(attendeeId);
+  const token = await createSession(attendeeId);
   const jar = await cookies();
   jar.set(SESSION_COOKIE, token, cookieBase(request, SESSION_MAX_AGE));
 }
@@ -51,7 +51,7 @@ export async function startAttendeeSession(attendeeId: number, request: Request)
 export async function endAttendeeSession() {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
-  if (token) destroySession(token);
+  if (token) await destroySession(token);
   jar.delete(SESSION_COOKIE);
 }
 

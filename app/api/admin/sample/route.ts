@@ -6,6 +6,6 @@ export const dynamic = "force-dynamic";
 
 export async function POST() {
   if (!(await isAdmin())) return jsonError("The badge desk is locked.", 401);
-  const added = loadSampleAttendees();
+  const added = await loadSampleAttendees();
   return Response.json({ added });
 }

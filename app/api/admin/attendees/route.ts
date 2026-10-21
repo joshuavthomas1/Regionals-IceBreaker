@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   if (!name.trim()) return jsonError("A name is required.", 400);
 
   try {
-    const attendee = addAttendee({
+    const attendee = await addAttendee({
       name,
       company: asString(body?.company),
       title: asString(body?.title),

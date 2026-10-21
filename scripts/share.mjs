@@ -1,12 +1,9 @@
 import { spawn, spawnSync } from "node:child_process";
-import { createRequire } from "node:module";
 import { chmodSync, createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { pipeline } from "node:stream/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
-const require = createRequire(import.meta.url);
-const Database = require("better-sqlite3");
+import postgres from "postgres";
 
 const VERSION = "2026.10.1";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -62,31 +59,53 @@ async function downloadCloudflared() {
   return binaryPath;
 }
 
-function openDb() {
-  const dbPath = process.env.ICEBREAKER_DB || path.join(root, "data", "icebreaker.sqlite");
-  mkdirSync(path.dirname(dbPath), { recursive: true });
-  const db = new Database(dbPath);
-  db.exec(`CREATE TABLE IF NOT EXISTS settings (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-  )`);
-  return db;
+function loadEnvFile() {
+  const file = path.join(root, ".env");
+  if (!existsSync(file)) return;
+  for (const line of readFileSync(file, "utf8").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq < 1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    if (process.env[key] != null) continue;
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    process.env[key] = value;
+  }
 }
 
-function readBaseUrl(db) {
-  const row = db.prepare("SELECT value FROM settings WHERE key = 'baseUrl'").get();
-  return typeof row?.value === "string" ? row.value : "";
+let sql;
+
+function db() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is missing. Add the Supabase pooler string to .env.");
+  }
+  if (!sql) {
+    sql = postgres(process.env.DATABASE_URL, { ssl: "require", max: 1, prepare: false });
+  }
+  return sql;
 }
 
-function writeBaseUrl(db, value) {
+async function readBaseUrl() {
+  const rows = await db()`SELECT value FROM settings WHERE key = 'baseUrl'`;
+  return typeof rows[0]?.value === "string" ? rows[0].value : "";
+}
+
+async function writeBaseUrl(value) {
   if (!value) {
-    db.prepare("DELETE FROM settings WHERE key = 'baseUrl'").run();
+    await db()`DELETE FROM settings WHERE key = 'baseUrl'`;
     return;
   }
-  db.prepare(
-    `INSERT INTO settings (key, value) VALUES ('baseUrl', ?)
-     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-  ).run(value);
+  await db()`
+    INSERT INTO settings (key, value) VALUES ('baseUrl', ${value})
+    ON CONFLICT (key) DO UPDATE SET value = excluded.value
+  `;
 }
 
 function isLocal(url) {
@@ -122,25 +141,25 @@ async function waitForServer() {
 }
 
 async function main() {
+  loadEnvFile();
   await waitForServer();
   const command = installedCloudflared() ?? (await downloadCloudflared());
   const child = spawn(command, ["tunnel", "--url", localUrl, "--no-autoupdate"], {
     stdio: ["ignore", "pipe", "pipe"],
   });
 
-  const db = openDb();
   let publicUrl = "";
   let wroteBaseUrl = false;
   let dbClosed = false;
-  let previousBaseUrl = readBaseUrl(db);
+  const previousBaseUrl = await readBaseUrl();
 
-  function closeDb() {
+  async function closeDb() {
     if (dbClosed) return;
     dbClosed = true;
-    db.close();
+    if (sql) await sql.end({ timeout: 2 });
   }
 
-  function announce(url) {
+  async function announce(url) {
     if (publicUrl) return;
     publicUrl = url;
     const keepExisting = previousBaseUrl && !isLocal(previousBaseUrl) && !isTunnel(previousBaseUrl);
@@ -150,7 +169,7 @@ async function main() {
       );
       return;
     }
-    writeBaseUrl(db, url);
+    await writeBaseUrl(url);
     wroteBaseUrl = true;
     process.stdout.write(
       `\nPublic link: ${url}\nBadge QR codes now use this address. Phones on cellular data can open it.\nLeave this running until you are done. Stopping it closes the link, and the next run gets a new address, so print badges again if you restart.\n`,
@@ -161,40 +180,40 @@ async function main() {
     const text = chunk.toString();
     process.stderr.write(text);
     const match = text.match(urlPattern);
-    if (match) announce(match[0]);
+    if (match) void announce(match[0]);
   }
 
   child.stdout.on("data", onChunk);
   child.stderr.on("data", onChunk);
 
-  function restore() {
+  async function restore() {
     if (!wroteBaseUrl || !publicUrl) return;
-    if (readBaseUrl(db) === publicUrl) writeBaseUrl(db, previousBaseUrl);
+    if ((await readBaseUrl()) === publicUrl) await writeBaseUrl(previousBaseUrl);
     wroteBaseUrl = false;
   }
 
-  function shutdown() {
-    restore();
-    closeDb();
+  async function shutdown() {
+    await restore();
+    await closeDb();
     if (!child.killed) child.kill("SIGTERM");
   }
 
   process.on("SIGINT", () => {
-    shutdown();
-    process.exit(0);
+    void shutdown().finally(() => process.exit(0));
   });
   process.on("SIGTERM", () => {
-    shutdown();
-    process.exit(0);
+    void shutdown().finally(() => process.exit(0));
   });
 
   child.on("exit", (code) => {
-    restore();
-    closeDb();
+    void restore()
+      .then(() => closeDb())
+      .finally(() => {
     if (!publicUrl) {
       process.stderr.write("The public link did not come up. Check the messages above.\n");
     }
     process.exit(code ?? 1);
+      });
   });
 }
 

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const attendee = await getCurrentAttendee();
-  const board = getBoard(attendee?.id ?? null);
+  const board = await getBoard(attendee?.id ?? null);
 
   return (
     <SiteShell>

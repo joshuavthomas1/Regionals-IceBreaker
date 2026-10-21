@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   title: "People",
 };
 
-export default function AdminPeoplePage() {
-  const attendees = listAttendees();
+export default async function AdminPeoplePage() {
+  const attendees = await listAttendees();
 
   return (
     <div className="flex flex-col gap-4">
